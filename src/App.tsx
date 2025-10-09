@@ -13,6 +13,8 @@ import AdminQueue from "./pages/admin/AdminQueue";
 import Management from "./pages/admin/Management";
 import Student from "./pages/admin/Student";
 import Teacher from "./pages/admin/Teacher";
+import Teachers from "./pages/admin/Teachers";
+import Courses from "./pages/admin/Courses";
 import StudentFee from "./pages/admin/StudentFee";
 import Attendance from "./pages/admin/Attendance";
 
