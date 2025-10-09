@@ -68,6 +68,16 @@ const initialAssessments: Record<string, AssessmentRecord[]> = {
   C002: [],
 };
 
+function nextId(prefix: string, ids: string[]): string {
+  const matches = ids
+    .map((id) => id.match(new RegExp(`^${prefix}(\\d+)$`)))
+    .filter((m): m is RegExpMatchArray => !!m);
+  const padLen = matches.length ? Math.max(...matches.map((m) => m[1].length)) : 3;
+  const maxNum = matches.length ? Math.max(...matches.map((m) => parseInt(m[1], 10))) : 0;
+  const next = String(maxNum + 1).padStart(padLen, "0");
+  return `${prefix}${next}`;
+}
+
 const Courses = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<CourseRecord[]>(initialCourses);
@@ -76,7 +86,9 @@ const Courses = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
+  const [originalCourseId, setOriginalCourseId] = useState<string | null>(null);
   const [form, setForm] = useState({
+    course_id: "",
     teacher_id: "",
     course_code: "",
     subject: "",
@@ -97,6 +109,7 @@ const Courses = () => {
 
   const resetForm = () =>
     setForm({
+      course_id: "",
       teacher_id: "",
       course_code: "",
       subject: "",
@@ -108,10 +121,26 @@ const Courses = () => {
       class_room: "",
     });
 
+  const openAddWithDefaults = () => {
+    const nextCourseId = nextId("C", courses.map((c) => c.course_id));
+    setForm({
+      course_id: nextCourseId,
+      teacher_id: "",
+      course_code: "",
+      subject: "",
+      grade: "",
+      stream: "",
+      day_of_week: "",
+      start_time: "",
+      end_time: "",
+      class_room: "",
+    });
+    setAddOpen(true);
+  };
+
   const handleAdd = () => {
-    const id = Date.now().toString();
     const newCourse: CourseRecord = {
-      course_id: `C${id}`,
+      course_id: form.course_id,
       teacher_id: form.teacher_id,
       course_code: form.course_code,
       subject: form.subject,
@@ -129,7 +158,9 @@ const Courses = () => {
 
   const openEdit = (c: CourseRecord) => {
     setEditingCourseId(c.course_id);
+    setOriginalCourseId(c.course_id);
     setForm({
+      course_id: c.course_id,
       teacher_id: c.teacher_id,
       course_code: c.course_code,
       subject: c.subject,
@@ -145,11 +176,15 @@ const Courses = () => {
 
   const saveEdit = () => {
     if (!editingCourseId) return;
+    const newId = form.course_id;
+    const oldId = originalCourseId;
+
     setCourses((prev) =>
       prev.map((c) =>
         c.course_id === editingCourseId
           ? {
               ...c,
+              course_id: newId,
               teacher_id: form.teacher_id,
               course_code: form.course_code,
               subject: form.subject,
@@ -163,8 +198,18 @@ const Courses = () => {
           : c,
       ),
     );
+
+    if (oldId && oldId !== newId) {
+      setAssessments((prev) => {
+        const current = prev[oldId] || [];
+        const { [oldId]: _removed, ...rest } = prev;
+        return { ...rest, [newId]: (prev[newId] || []).concat(current) };
+      });
+    }
+
     setEditOpen(false);
     setEditingCourseId(null);
+    setOriginalCourseId(null);
     resetForm();
   };
 
@@ -213,7 +258,7 @@ const Courses = () => {
                 </Button>
                 <h1 className="text-3xl font-bold">Courses</h1>
               </div>
-              <Button onClick={() => setAddOpen(true)}>
+              <Button onClick={openAddWithDefaults}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Course
               </Button>
@@ -280,7 +325,10 @@ const Courses = () => {
                 <DialogDescription>Enter the course details below.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-3 py-2">
-                <Input placeholder="Teacher ID" value={form.teacher_id} onChange={(e) => setForm((p) => ({ ...p, teacher_id: e.target.value }))} />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Course ID" value={form.course_id} onChange={(e) => setForm((p) => ({ ...p, course_id: e.target.value }))} />
+                  <Input placeholder="Teacher ID" value={form.teacher_id} onChange={(e) => setForm((p) => ({ ...p, teacher_id: e.target.value }))} />
+                </div>
                 <Input placeholder="Course Code" value={form.course_code} onChange={(e) => setForm((p) => ({ ...p, course_code: e.target.value }))} />
                 <Input placeholder="Subject" value={form.subject} onChange={(e) => setForm((p) => ({ ...p, subject: e.target.value }))} />
                 <Input placeholder="Grade" value={form.grade} onChange={(e) => setForm((p) => ({ ...p, grade: e.target.value }))} />
@@ -306,7 +354,10 @@ const Courses = () => {
                 <DialogDescription>Update the course details below.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-3 py-2">
-                <Input placeholder="Teacher ID" value={form.teacher_id} onChange={(e) => setForm((p) => ({ ...p, teacher_id: e.target.value }))} />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Course ID" value={form.course_id} onChange={(e) => setForm((p) => ({ ...p, course_id: e.target.value }))} />
+                  <Input placeholder="Teacher ID" value={form.teacher_id} onChange={(e) => setForm((p) => ({ ...p, teacher_id: e.target.value }))} />
+                </div>
                 <Input placeholder="Course Code" value={form.course_code} onChange={(e) => setForm((p) => ({ ...p, course_code: e.target.value }))} />
                 <Input placeholder="Subject" value={form.subject} onChange={(e) => setForm((p) => ({ ...p, subject: e.target.value }))} />
                 <Input placeholder="Grade" value={form.grade} onChange={(e) => setForm((p) => ({ ...p, grade: e.target.value }))} />
