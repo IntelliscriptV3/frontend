@@ -76,22 +76,34 @@ const Student = () => {
   });
 
   const handleAddStudent = () => {
-    console.log("Adding new student:", newStudent);
-    // TODO: Implement backend submission
-    setAddStudentOpen(false);
-    setNewStudent({
-      first_name: "",
-      middle_name: "",
-      last_name: "",
-      contact_no: "",
-      address_line1: "",
-      address_line2: "",
-      address_line3: "",
-      age: "",
-      stream: "",
-      grade: "",
-    });
+  console.log("Adding new student:", newStudent);
+
+  // Create a new student object with an ID (you can replace this with backend-generated IDs later)
+  const studentWithId = {
+    student_id: `S${Date.now()}`, // temporary unique ID
+    user_id: `U${Date.now()}`,
+    ...newStudent,
+    age: Number(newStudent.age),
   };
+
+  // Update the state to include the new student
+  setStudentData((prev) => [...prev, studentWithId]);
+
+  // Close dialog and reset form
+  setAddStudentOpen(false);
+  setNewStudent({
+    first_name: "",
+    middle_name: "",
+    last_name: "",
+    contact_no: "",
+    address_line1: "",
+    address_line2: "",
+    address_line3: "",
+    age: "",
+    stream: "",
+    grade: "",
+  });
+};
 
   const filteredEnrollment = enrollmentData.filter((item) => {
     return (
