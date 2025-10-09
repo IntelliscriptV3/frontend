@@ -51,6 +51,16 @@ const initialTeachers: TeacherRecord[] = [
   },
 ];
 
+function nextId(prefix: string, ids: string[]): string {
+  const matches = ids
+    .map((id) => id.match(new RegExp(`^${prefix}(\\d+)$`)))
+    .filter((m): m is RegExpMatchArray => !!m);
+  const padLen = matches.length ? Math.max(...matches.map((m) => m[1].length)) : 3;
+  const maxNum = matches.length ? Math.max(...matches.map((m) => parseInt(m[1], 10))) : 0;
+  const next = String(maxNum + 1).padStart(padLen, "0");
+  return `${prefix}${next}`;
+}
+
 const Teachers = () => {
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState<TeacherRecord[]>(initialTeachers);
@@ -58,6 +68,8 @@ const Teachers = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
+    teacher_id: "",
+    user_id: "",
     first_name: "",
     middle_name: "",
     last_name: "",
@@ -69,6 +81,8 @@ const Teachers = () => {
 
   const resetForm = () =>
     setForm({
+      teacher_id: "",
+      user_id: "",
       first_name: "",
       middle_name: "",
       last_name: "",
@@ -78,11 +92,28 @@ const Teachers = () => {
       age: "",
     });
 
+  const openAddWithDefaults = () => {
+    const nextTeacherId = nextId("T", teachers.map((t) => t.teacher_id));
+    const nextUserId = nextId("U", teachers.map((t) => t.user_id));
+    setForm((p) => ({
+      ...p,
+      teacher_id: nextTeacherId,
+      user_id: nextUserId,
+      first_name: "",
+      middle_name: "",
+      last_name: "",
+      address_line1: "",
+      address_line2: "",
+      address_line3: "",
+      age: "",
+    }));
+    setAddOpen(true);
+  };
+
   const handleAdd = () => {
-    const id = Date.now().toString();
     const newTeacher: TeacherRecord = {
-      teacher_id: `T${id}`,
-      user_id: `U${id}`,
+      teacher_id: form.teacher_id,
+      user_id: form.user_id,
       first_name: form.first_name,
       middle_name: form.middle_name,
       last_name: form.last_name,
@@ -99,6 +130,8 @@ const Teachers = () => {
   const handleEditOpen = (t: TeacherRecord) => {
     setEditingId(t.teacher_id);
     setForm({
+      teacher_id: t.teacher_id,
+      user_id: t.user_id,
       first_name: t.first_name,
       middle_name: t.middle_name,
       last_name: t.last_name,
@@ -117,6 +150,8 @@ const Teachers = () => {
         t.teacher_id === editingId
           ? {
               ...t,
+              teacher_id: form.teacher_id,
+              user_id: form.user_id,
               first_name: form.first_name,
               middle_name: form.middle_name,
               last_name: form.last_name,
@@ -156,7 +191,7 @@ const Teachers = () => {
                 </Button>
                 <h1 className="text-3xl font-bold">Teachers</h1>
               </div>
-              <Button onClick={() => setAddOpen(true)}>
+              <Button onClick={openAddWithDefaults}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Teacher
               </Button>
@@ -212,6 +247,10 @@ const Teachers = () => {
                 <DialogDescription>Enter the teacher details below.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-3 py-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Teacher ID" value={form.teacher_id} onChange={(e) => setForm((p) => ({ ...p, teacher_id: e.target.value }))} />
+                  <Input placeholder="User ID" value={form.user_id} onChange={(e) => setForm((p) => ({ ...p, user_id: e.target.value }))} />
+                </div>
                 <Input placeholder="First Name" value={form.first_name} onChange={(e) => setForm((p) => ({ ...p, first_name: e.target.value }))} />
                 <Input placeholder="Middle Name" value={form.middle_name} onChange={(e) => setForm((p) => ({ ...p, middle_name: e.target.value }))} />
                 <Input placeholder="Last Name" value={form.last_name} onChange={(e) => setForm((p) => ({ ...p, last_name: e.target.value }))} />
@@ -234,6 +273,10 @@ const Teachers = () => {
                 <DialogDescription>Update the teacher details below.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-3 py-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Teacher ID" value={form.teacher_id} onChange={(e) => setForm((p) => ({ ...p, teacher_id: e.target.value }))} />
+                  <Input placeholder="User ID" value={form.user_id} onChange={(e) => setForm((p) => ({ ...p, user_id: e.target.value }))} />
+                </div>
                 <Input placeholder="First Name" value={form.first_name} onChange={(e) => setForm((p) => ({ ...p, first_name: e.target.value }))} />
                 <Input placeholder="Middle Name" value={form.middle_name} onChange={(e) => setForm((p) => ({ ...p, middle_name: e.target.value }))} />
                 <Input placeholder="Last Name" value={form.last_name} onChange={(e) => setForm((p) => ({ ...p, last_name: e.target.value }))} />
