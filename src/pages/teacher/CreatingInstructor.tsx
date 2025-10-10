@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 type InstructorRecord = {
@@ -29,6 +29,7 @@ const schema = z.object({
 const CreatingInstructor = () => {
   const [records, setRecords] = useState<InstructorRecord[]>([]);
   const [open, setOpen] = useState(false);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof schema>>({
@@ -42,23 +43,41 @@ const CreatingInstructor = () => {
   );
 
   const onSubmit = (values: z.infer<typeof schema>) => {
-    const exists = records.some(
+    const duplicateAt = records.findIndex(
       (r) => r.instructorId === values.instructorId && r.moduleId === values.moduleId,
     );
-    if (exists) {
-      toast({ title: "Duplicate entry", description: "This Instructor_ID and Module_ID combination already exists." });
-      return;
+
+    if (editIndex === null) {
+      if (duplicateAt !== -1) {
+        toast({ title: "Duplicate entry", description: "This Instructor_ID and Module_ID combination already exists." });
+        return;
+      }
+      setRecords((prev) => [...prev, values]);
+      toast({ title: "Instructor added", description: `${values.instructorName} assigned to ${values.moduleName}` });
+    } else {
+      if (duplicateAt !== -1 && duplicateAt !== editIndex) {
+        toast({ title: "Duplicate entry", description: "Another entry with the same Instructor_ID and Module_ID exists." });
+        return;
+      }
+      setRecords((prev) => prev.map((r, i) => (i === editIndex ? values : r)));
+      toast({ title: "Instructor updated" });
     }
 
-    setRecords((prev) => [...prev, values]);
     setOpen(false);
+    setEditIndex(null);
     form.reset();
-    toast({ title: "Instructor added", description: `${values.instructorName} assigned to ${values.moduleName}` });
   };
 
   const handleDelete = (index: number) => {
     setRecords((prev) => prev.filter((_, i) => i !== index));
     toast({ title: "Entry deleted" });
+  };
+
+  const handleEdit = (index: number) => {
+    const rec = records[index];
+    form.reset({ ...rec });
+    setEditIndex(index);
+    setOpen(true);
   };
 
   return (
@@ -69,15 +88,15 @@ const CreatingInstructor = () => {
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-3xl font-bold">Creating Instructor</h1>
-              <Dialog open={open} onOpenChange={setOpen}>
+              <Dialog open={open} onOpenChange={(v) => { if (!v) { setEditIndex(null); form.reset({ instructorId: "", instructorName: "", moduleId: "", moduleName: "" }); } setOpen(v); }}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button onClick={() => { setEditIndex(null); form.reset({ instructorId: "", instructorName: "", moduleId: "", moduleName: "" }); }}>
                     <Plus className="mr-2" /> Add Instructor
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add Instructor</DialogTitle>
+                    <DialogTitle>{editIndex === null ? "Add Instructor" : "Edit Instructor"}</DialogTitle>
                   </DialogHeader>
                   <Form {...form}>
                     <form
@@ -141,7 +160,7 @@ const CreatingInstructor = () => {
                       />
 
                       <DialogFooter className="sm:col-span-2 mt-2">
-                        <Button type="submit">Save</Button>
+                        <Button type="submit">{editIndex === null ? "Save" : "Update"}</Button>
                       </DialogFooter>
                     </form>
                   </Form>
@@ -172,7 +191,10 @@ const CreatingInstructor = () => {
                         <TableCell>{r.instructorName}</TableCell>
                         <TableCell>{r.moduleId}</TableCell>
                         <TableCell>{r.moduleName}</TableCell>
-                        <TableCell>
+                        <TableCell className="space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => handleEdit(idx)}>
+                            <Pencil /> Edit
+                          </Button>
                           <Button variant="destructive" size="sm" onClick={() => handleDelete(idx)}>
                             <Trash2 /> Delete
                           </Button>
