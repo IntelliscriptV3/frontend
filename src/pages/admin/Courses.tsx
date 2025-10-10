@@ -289,12 +289,14 @@ const Courses = () => {
     setResultsOpen(true);
   };
 
+  const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || "";
+
   useEffect(() => {
     const fetchResults = async (assessmentId: string) => {
       setResultsLoading(true);
       setResultsError(null);
       try {
-        const res = await fetch(`/api/assessments/${encodeURIComponent(assessmentId)}/results`, {
+        const res = await fetch(`${API_BASE}/api/assessments/${encodeURIComponent(assessmentId)}/results`, {
           headers: { "Content-Type": "application/json" },
         });
         if (!res.ok) {
