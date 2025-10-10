@@ -29,6 +29,9 @@ import AssessmentResults from "./pages/teacher/AssessmentResults";
 // Instructor pages
 import InstructorChat from "./pages/instructor/InstructorChat";
 import InstructorAssessment from "./pages/instructor/InstructorAssessment";
+import InstructorSubjects from "./pages/instructor/InstructorSubjects";
+import InstructorCourseAssessments from "./pages/instructor/InstructorCourseAssessments";
+import InstructorAssessmentResults from "./pages/instructor/InstructorAssessmentResults";
 
 // Student pages
 import StudentChat from "./pages/student/StudentChat";
@@ -66,7 +69,9 @@ const App = () => (
           
           {/* Instructor routes */}
           <Route path="/instructor" element={<InstructorChat />} />
-          <Route path="/instructor/assessment" element={<InstructorAssessment />} />
+          <Route path="/instructor/assessment" element={<InstructorSubjects />} />
+          <Route path="/instructor/assessment/:courseId" element={<InstructorCourseAssessments />} />
+          <Route path="/instructor/assessment/:courseId/:assessmentId/results" element={<InstructorAssessmentResults />} />
           
           {/* Student routes */}
           <Route path="/student" element={<StudentChat />} />
