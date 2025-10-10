@@ -22,6 +22,9 @@ import Attendance from "./pages/admin/Attendance";
 import TeacherChat from "./pages/teacher/TeacherChat";
 import CreatingInstructor from "./pages/teacher/CreatingInstructor";
 import TeacherAssessment from "./pages/teacher/TeacherAssessment";
+import AssessmentSubjects from "./pages/teacher/AssessmentSubjects";
+import CourseAssessments from "./pages/teacher/CourseAssessments";
+import AssessmentResults from "./pages/teacher/AssessmentResults";
 
 // Instructor pages
 import InstructorChat from "./pages/instructor/InstructorChat";
@@ -57,7 +60,9 @@ const App = () => (
           {/* Teacher routes */}
           <Route path="/teacher" element={<TeacherChat />} />
           <Route path="/teacher/create-instructor" element={<CreatingInstructor />} />
-          <Route path="/teacher/assessment" element={<TeacherAssessment />} />
+          <Route path="/teacher/assessment" element={<AssessmentSubjects />} />
+          <Route path="/teacher/assessment/:courseId" element={<CourseAssessments />} />
+          <Route path="/teacher/assessment/:courseId/:assessmentId/results" element={<AssessmentResults />} />
           
           {/* Instructor routes */}
           <Route path="/instructor" element={<InstructorChat />} />
