@@ -13,6 +13,8 @@ import AdminQueue from "./pages/admin/AdminQueue";
 import Management from "./pages/admin/Management";
 import Student from "./pages/admin/Student";
 import Teacher from "./pages/admin/Teacher";
+import Teachers from "./pages/admin/Teachers";
+import Courses from "./pages/admin/Courses";
 import StudentFee from "./pages/admin/StudentFee";
 import Attendance from "./pages/admin/Attendance";
 
@@ -20,10 +22,16 @@ import Attendance from "./pages/admin/Attendance";
 import TeacherChat from "./pages/teacher/TeacherChat";
 import CreatingInstructor from "./pages/teacher/CreatingInstructor";
 import TeacherAssessment from "./pages/teacher/TeacherAssessment";
+import AssessmentSubjects from "./pages/teacher/AssessmentSubjects";
+import CourseAssessments from "./pages/teacher/CourseAssessments";
+import AssessmentResults from "./pages/teacher/AssessmentResults";
 
 // Instructor pages
 import InstructorChat from "./pages/instructor/InstructorChat";
 import InstructorAssessment from "./pages/instructor/InstructorAssessment";
+import InstructorSubjects from "./pages/instructor/InstructorSubjects";
+import InstructorCourseAssessments from "./pages/instructor/InstructorCourseAssessments";
+import InstructorAssessmentResults from "./pages/instructor/InstructorAssessmentResults";
 
 // Student pages
 import StudentChat from "./pages/student/StudentChat";
@@ -48,17 +56,23 @@ const App = () => (
           <Route path="/admin/management" element={<Management />} />
           <Route path="/admin/student" element={<Student />} />
           <Route path="/admin/teacher" element={<Teacher />} />
+          <Route path="/admin/teacher/teachers" element={<Teachers />} />
+          <Route path="/admin/teacher/courses" element={<Courses />} />
           <Route path="/admin/fee" element={<StudentFee />} />
           <Route path="/admin/attendance" element={<Attendance />} />
           
           {/* Teacher routes */}
           <Route path="/teacher" element={<TeacherChat />} />
           <Route path="/teacher/create-instructor" element={<CreatingInstructor />} />
-          <Route path="/teacher/assessment" element={<TeacherAssessment />} />
+          <Route path="/teacher/assessment" element={<AssessmentSubjects />} />
+          <Route path="/teacher/assessment/:courseId" element={<CourseAssessments />} />
+          <Route path="/teacher/assessment/:courseId/:assessmentId/results" element={<AssessmentResults />} />
           
           {/* Instructor routes */}
           <Route path="/instructor" element={<InstructorChat />} />
-          <Route path="/instructor/assessment" element={<InstructorAssessment />} />
+          <Route path="/instructor/assessment" element={<InstructorSubjects />} />
+          <Route path="/instructor/assessment/:courseId" element={<InstructorCourseAssessments />} />
+          <Route path="/instructor/assessment/:courseId/:assessmentId/results" element={<InstructorAssessmentResults />} />
           
           {/* Student routes */}
           <Route path="/student" element={<StudentChat />} />
