@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { Button } from "@/components/ui/button";
@@ -28,10 +28,20 @@ export type CourseRecord = {
 };
 
 export type AssessmentRecord = {
-  id: string;
+  id: string; // Assessment_ID
+  title: string; // Title
   description: string;
   start_time: string;
   end_time: string;
+  max_marks: number;
+};
+
+export type AssessmentResult = {
+  result_id: string;
+  assessment_id: string;
+  student_id: string;
+  marks_obtained: number;
+  graded_at: string;
 };
 
 const initialCourses: CourseRecord[] = [
@@ -63,7 +73,14 @@ const initialCourses: CourseRecord[] = [
 
 const initialAssessments: Record<string, AssessmentRecord[]> = {
   C001: [
-    { id: "A1", description: "Chapter 1 Quiz", start_time: "2025-10-10 09:00", end_time: "2025-10-10 09:30" },
+    {
+      id: "A1",
+      title: "Chapter 1 Quiz",
+      description: "Quiz on Algebra basics",
+      start_time: "2025-10-10 09:00",
+      end_time: "2025-10-10 09:30",
+      max_marks: 100,
+    },
   ],
   C002: [],
 };
@@ -102,8 +119,14 @@ const Courses = () => {
 
   const [assessmentOpen, setAssessmentOpen] = useState(false);
   const [assessmentCourseId, setAssessmentCourseId] = useState<string | null>(null);
-  const [assessmentForm, setAssessmentForm] = useState({ description: "", start_time: "", end_time: "" });
+  const [assessmentForm, setAssessmentForm] = useState({ title: "", description: "", start_time: "", end_time: "", max_marks: "" });
   const [editingAssessmentId, setEditingAssessmentId] = useState<string | null>(null);
+
+  const [resultsOpen, setResultsOpen] = useState(false);
+  const [resultsAssessmentId, setResultsAssessmentId] = useState<string | null>(null);
+  const [resultsLoading, setResultsLoading] = useState(false);
+  const [resultsError, setResultsError] = useState<string | null>(null);
+  const [results, setResults] = useState<AssessmentResult[]>([]);
 
   const selectedCourse = useMemo(() => courses.find((c) => c.course_id === assessmentCourseId) || null, [courses, assessmentCourseId]);
 
@@ -216,21 +239,28 @@ const Courses = () => {
   const openAssessments = (course_id: string) => {
     setAssessmentCourseId(course_id);
     setAssessmentOpen(true);
-    setAssessmentForm({ description: "", start_time: "", end_time: "" });
+    setAssessmentForm({ title: "", description: "", start_time: "", end_time: "", max_marks: "" });
     setEditingAssessmentId(null);
   };
 
   const addAssessment = () => {
     if (!assessmentCourseId) return;
     const id = Date.now().toString();
-    const newRec: AssessmentRecord = { id: `AS${id}`, description: assessmentForm.description, start_time: assessmentForm.start_time, end_time: assessmentForm.end_time };
+    const newRec: AssessmentRecord = {
+      id: `AS${id}`,
+      title: assessmentForm.title,
+      description: assessmentForm.description,
+      start_time: assessmentForm.start_time,
+      end_time: assessmentForm.end_time,
+      max_marks: Number(assessmentForm.max_marks) || 0,
+    };
     setAssessments((prev) => ({ ...prev, [assessmentCourseId]: [...(prev[assessmentCourseId] || []), newRec] }));
-    setAssessmentForm({ description: "", start_time: "", end_time: "" });
+    setAssessmentForm({ title: "", description: "", start_time: "", end_time: "", max_marks: "" });
   };
 
   const startEditAssessment = (a: AssessmentRecord) => {
     setEditingAssessmentId(a.id);
-    setAssessmentForm({ description: a.description, start_time: a.start_time, end_time: a.end_time });
+    setAssessmentForm({ title: a.title, description: a.description, start_time: a.start_time, end_time: a.end_time, max_marks: String(a.max_marks) });
   };
 
   const saveAssessment = () => {
@@ -238,12 +268,56 @@ const Courses = () => {
     setAssessments((prev) => ({
       ...prev,
       [assessmentCourseId]: (prev[assessmentCourseId] || []).map((a) =>
-        a.id === editingAssessmentId ? { ...a, description: assessmentForm.description, start_time: assessmentForm.start_time, end_time: assessmentForm.end_time } : a,
+        a.id === editingAssessmentId
+          ? {
+              ...a,
+              title: assessmentForm.title,
+              description: assessmentForm.description,
+              start_time: assessmentForm.start_time,
+              end_time: assessmentForm.end_time,
+              max_marks: Number(assessmentForm.max_marks) || 0,
+            }
+          : a,
       ),
     }));
     setEditingAssessmentId(null);
-    setAssessmentForm({ description: "", start_time: "", end_time: "" });
+    setAssessmentForm({ title: "", description: "", start_time: "", end_time: "", max_marks: "" });
   };
+
+  const openResults = (assessment_id: string) => {
+    setResultsAssessmentId(assessment_id);
+    setResultsOpen(true);
+  };
+
+  useEffect(() => {
+    const fetchResults = async (assessmentId: string) => {
+      setResultsLoading(true);
+      setResultsError(null);
+      try {
+        const res = await fetch(`/api/assessments/${encodeURIComponent(assessmentId)}/results`, {
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to load results (${res.status})`);
+        }
+        const data: AssessmentResult[] = await res.json();
+        setResults(data);
+      } catch (e: any) {
+        setResultsError(e?.message || "Unable to load results");
+        setResults([]);
+      } finally {
+        setResultsLoading(false);
+      }
+    };
+
+    if (resultsOpen && resultsAssessmentId) {
+      fetchResults(resultsAssessmentId);
+    } else if (!resultsOpen) {
+      setResults([]);
+      setResultsError(null);
+      setResultsLoading(false);
+    }
+  }, [resultsOpen, resultsAssessmentId]);
 
   return (
     <SidebarProvider>
@@ -377,7 +451,7 @@ const Courses = () => {
           </Dialog>
 
           <Dialog open={assessmentOpen} onOpenChange={setAssessmentOpen}>
-            <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[900px] max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   Assessments {selectedCourse ? `— ${selectedCourse.subject} (Teacher: ${selectedCourse.teacher_id})` : ""}
@@ -389,29 +463,39 @@ const Courses = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Assessment ID</TableHead>
+                      <TableHead>Title</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Start Time</TableHead>
                       <TableHead>End Time</TableHead>
+                      <TableHead>Max Marks</TableHead>
                       <TableHead>Actions</TableHead>
+                      <TableHead>Results</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {(assessments[assessmentCourseId || ""] || []).length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                           No assessments yet. Use the form below to add one.
                         </TableCell>
                       </TableRow>
                     ) : (
                       (assessments[assessmentCourseId || ""] || []).map((a) => (
                         <TableRow key={a.id}>
+                          <TableCell>{a.id}</TableCell>
+                          <TableCell>{a.title}</TableCell>
                           <TableCell>{a.description}</TableCell>
                           <TableCell>{a.start_time}</TableCell>
                           <TableCell>{a.end_time}</TableCell>
+                          <TableCell>{a.max_marks}</TableCell>
                           <TableCell>
                             <Button size="sm" variant="outline" onClick={() => startEditAssessment(a)}>
                               <Edit className="h-4 w-4 mr-1" /> Edit
                             </Button>
+                          </TableCell>
+                          <TableCell>
+                            <Button size="sm" onClick={() => openResults(a.id)}>View Results</Button>
                           </TableCell>
                         </TableRow>
                       ))
@@ -421,14 +505,16 @@ const Courses = () => {
               </div>
 
               <div className="grid gap-3">
+                <Input placeholder="Title" value={assessmentForm.title} onChange={(e) => setAssessmentForm((p) => ({ ...p, title: e.target.value }))} />
                 <Input placeholder="Description" value={assessmentForm.description} onChange={(e) => setAssessmentForm((p) => ({ ...p, description: e.target.value }))} />
                 <div className="grid grid-cols-2 gap-3">
                   <Input placeholder="Start Time (e.g., 2025-10-10 09:00)" value={assessmentForm.start_time} onChange={(e) => setAssessmentForm((p) => ({ ...p, start_time: e.target.value }))} />
                   <Input placeholder="End Time (e.g., 2025-10-10 10:00)" value={assessmentForm.end_time} onChange={(e) => setAssessmentForm((p) => ({ ...p, end_time: e.target.value }))} />
                 </div>
+                <Input placeholder="Max Marks (e.g., 100)" value={assessmentForm.max_marks} onChange={(e) => setAssessmentForm((p) => ({ ...p, max_marks: e.target.value }))} />
                 {editingAssessmentId ? (
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => { setEditingAssessmentId(null); setAssessmentForm({ description: "", start_time: "", end_time: "" }); }}>Cancel</Button>
+                    <Button variant="outline" onClick={() => { setEditingAssessmentId(null); setAssessmentForm({ title: "", description: "", start_time: "", end_time: "", max_marks: "" }); }}>Cancel</Button>
                     <Button onClick={saveAssessment}>Save</Button>
                   </div>
                 ) : (
@@ -437,6 +523,48 @@ const Courses = () => {
                   </div>
                 )}
               </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={resultsOpen} onOpenChange={setResultsOpen}>
+            <DialogContent className="sm:max-w-[900px] max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Assessment Results {resultsAssessmentId ? `— ${resultsAssessmentId}` : ""}</DialogTitle>
+                <DialogDescription>Results fetched from backend.</DialogDescription>
+              </DialogHeader>
+
+              {resultsLoading ? (
+                <div className="py-8 text-center text-muted-foreground">Loading results…</div>
+              ) : resultsError ? (
+                <div className="py-8 text-center text-red-600">{resultsError}</div>
+              ) : results.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">No results available.</div>
+              ) : (
+                <div className="rounded-md border overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>result_id</TableHead>
+                        <TableHead>assessment_id</TableHead>
+                        <TableHead>student_id</TableHead>
+                        <TableHead>marks_obtained</TableHead>
+                        <TableHead>graded_at</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {results.map((r) => (
+                        <TableRow key={r.result_id}>
+                          <TableCell>{r.result_id}</TableCell>
+                          <TableCell>{r.assessment_id}</TableCell>
+                          <TableCell>{r.student_id}</TableCell>
+                          <TableCell>{r.marks_obtained}</TableCell>
+                          <TableCell>{r.graded_at}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         </main>
