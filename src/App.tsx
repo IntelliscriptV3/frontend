@@ -28,6 +28,7 @@ import InstructorAssessment from "./pages/instructor/InstructorAssessment";
 // Student pages
 import StudentChat from "./pages/student/StudentChat";
 import StudentAssessment from "./pages/student/StudentAssessment";
+import StudentCourse from "./pages/student/StudentCourse";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
           {/* Student routes */}
           <Route path="/student" element={<StudentChat />} />
           <Route path="/student/assessment" element={<StudentAssessment />} />
+          <Route path="/student/course/:courseId" element={<StudentCourse />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
