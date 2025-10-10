@@ -128,6 +128,9 @@ const Courses = () => {
   const [resultsError, setResultsError] = useState<string | null>(null);
   const [results, setResults] = useState<AssessmentResult[]>([]);
 
+  const [addAssessmentOpen, setAddAssessmentOpen] = useState(false);
+  const [addForm, setAddForm] = useState({ title: "", description: "", start_time: "", end_time: "", max_marks: "" });
+
   const selectedCourse = useMemo(() => courses.find((c) => c.course_id === assessmentCourseId) || null, [courses, assessmentCourseId]);
 
   const resetForm = () =>
@@ -282,6 +285,22 @@ const Courses = () => {
     }));
     setEditingAssessmentId(null);
     setAssessmentForm({ title: "", description: "", start_time: "", end_time: "", max_marks: "" });
+  };
+
+  const submitAddAssessment = () => {
+    if (!assessmentCourseId) return;
+    const id = Date.now().toString();
+    const newRec: AssessmentRecord = {
+      id: `AS${id}`,
+      title: addForm.title,
+      description: addForm.description,
+      start_time: addForm.start_time,
+      end_time: addForm.end_time,
+      max_marks: Number(addForm.max_marks) || 0,
+    };
+    setAssessments((prev) => ({ ...prev, [assessmentCourseId]: [...(prev[assessmentCourseId] || []), newRec] }));
+    setAddForm({ title: "", description: "", start_time: "", end_time: "", max_marks: "" });
+    setAddAssessmentOpen(false);
   };
 
   const openResults = (assessment_id: string) => {
@@ -461,6 +480,12 @@ const Courses = () => {
                 <DialogDescription>Manage current assessments for this course.</DialogDescription>
               </DialogHeader>
 
+              <div className="flex justify-end mb-3">
+                <Button onClick={() => { setAddAssessmentOpen(true); setAddForm({ title: "", description: "", start_time: "", end_time: "", max_marks: "" }); }}>
+                  <Plus className="h-4 w-4 mr-2" /> Add Assessment
+                </Button>
+              </div>
+
               <div className="rounded-md border overflow-x-auto mb-4">
                 <Table>
                   <TableHeader>
@@ -479,7 +504,7 @@ const Courses = () => {
                     {(assessments[assessmentCourseId || ""] || []).length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                          No assessments yet. Use the form below to add one.
+                          No assessments yet. Click "Add Assessment" above.
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -506,24 +531,42 @@ const Courses = () => {
                 </Table>
               </div>
 
-              <div className="grid gap-3">
-                <Input placeholder="Title" value={assessmentForm.title} onChange={(e) => setAssessmentForm((p) => ({ ...p, title: e.target.value }))} />
-                <Input placeholder="Description" value={assessmentForm.description} onChange={(e) => setAssessmentForm((p) => ({ ...p, description: e.target.value }))} />
-                <div className="grid grid-cols-2 gap-3">
-                  <Input placeholder="Start Time (e.g., 2025-10-10 09:00)" value={assessmentForm.start_time} onChange={(e) => setAssessmentForm((p) => ({ ...p, start_time: e.target.value }))} />
-                  <Input placeholder="End Time (e.g., 2025-10-10 10:00)" value={assessmentForm.end_time} onChange={(e) => setAssessmentForm((p) => ({ ...p, end_time: e.target.value }))} />
-                </div>
-                <Input placeholder="Max Marks (e.g., 100)" value={assessmentForm.max_marks} onChange={(e) => setAssessmentForm((p) => ({ ...p, max_marks: e.target.value }))} />
-                {editingAssessmentId ? (
+              {editingAssessmentId && (
+                <div className="grid gap-3">
+                  <Input placeholder="Title" value={assessmentForm.title} onChange={(e) => setAssessmentForm((p) => ({ ...p, title: e.target.value }))} />
+                  <Input placeholder="Description" value={assessmentForm.description} onChange={(e) => setAssessmentForm((p) => ({ ...p, description: e.target.value }))} />
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input placeholder="Start Time (e.g., 2025-10-10 09:00)" value={assessmentForm.start_time} onChange={(e) => setAssessmentForm((p) => ({ ...p, start_time: e.target.value }))} />
+                    <Input placeholder="End Time (e.g., 2025-10-10 10:00)" value={assessmentForm.end_time} onChange={(e) => setAssessmentForm((p) => ({ ...p, end_time: e.target.value }))} />
+                  </div>
+                  <Input placeholder="Max Marks (e.g., 100)" value={assessmentForm.max_marks} onChange={(e) => setAssessmentForm((p) => ({ ...p, max_marks: e.target.value }))} />
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => { setEditingAssessmentId(null); setAssessmentForm({ title: "", description: "", start_time: "", end_time: "", max_marks: "" }); }}>Cancel</Button>
                     <Button onClick={saveAssessment}>Save</Button>
                   </div>
-                ) : (
-                  <div className="flex justify-end">
-                    <Button onClick={addAssessment}>Add Assessment</Button>
-                  </div>
-                )}
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={addAssessmentOpen} onOpenChange={setAddAssessmentOpen}>
+            <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add Assessment</DialogTitle>
+                <DialogDescription>Enter assessment details.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-3">
+                <Input placeholder="Title" value={addForm.title} onChange={(e) => setAddForm((p) => ({ ...p, title: e.target.value }))} />
+                <Input placeholder="Description" value={addForm.description} onChange={(e) => setAddForm((p) => ({ ...p, description: e.target.value }))} />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Start Time (e.g., 2025-10-10 09:00)" value={addForm.start_time} onChange={(e) => setAddForm((p) => ({ ...p, start_time: e.target.value }))} />
+                  <Input placeholder="End Time (e.g., 2025-10-10 10:00)" value={addForm.end_time} onChange={(e) => setAddForm((p) => ({ ...p, end_time: e.target.value }))} />
+                </div>
+                <Input placeholder="Max Marks (e.g., 100)" value={addForm.max_marks} onChange={(e) => setAddForm((p) => ({ ...p, max_marks: e.target.value }))} />
+              </div>
+              <div className="flex justify-end gap-2 mt-2">
+                <Button variant="outline" onClick={() => setAddAssessmentOpen(false)}>Cancel</Button>
+                <Button onClick={submitAddAssessment}>Add</Button>
               </div>
             </DialogContent>
           </Dialog>
