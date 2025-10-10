@@ -13,6 +13,8 @@ import AdminQueue from "./pages/admin/AdminQueue";
 import Management from "./pages/admin/Management";
 import Student from "./pages/admin/Student";
 import Teacher from "./pages/admin/Teacher";
+import Teachers from "./pages/admin/Teachers";
+import Courses from "./pages/admin/Courses";
 import StudentFee from "./pages/admin/StudentFee";
 import Attendance from "./pages/admin/Attendance";
 
@@ -47,6 +49,8 @@ const App = () => (
           <Route path="/admin/management" element={<Management />} />
           <Route path="/admin/student" element={<Student />} />
           <Route path="/admin/teacher" element={<Teacher />} />
+          <Route path="/admin/teacher/teachers" element={<Teachers />} />
+          <Route path="/admin/teacher/courses" element={<Courses />} />
           <Route path="/admin/fee" element={<StudentFee />} />
           <Route path="/admin/attendance" element={<Attendance />} />
           
