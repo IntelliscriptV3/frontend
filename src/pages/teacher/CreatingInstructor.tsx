@@ -52,14 +52,14 @@ const CreatingInstructor = () => {
         toast({ title: "Duplicate entry", description: "This Instructor_ID and Module_ID combination already exists." });
         return;
       }
-      setRecords((prev) => [...prev, values]);
+      setRecords((prev) => [...prev, values as InstructorRecord]);
       toast({ title: "Instructor added", description: `${values.instructorName} assigned to ${values.moduleName}` });
     } else {
       if (duplicateAt !== -1 && duplicateAt !== editIndex) {
         toast({ title: "Duplicate entry", description: "Another entry with the same Instructor_ID and Module_ID exists." });
         return;
       }
-      setRecords((prev) => prev.map((r, i) => (i === editIndex ? values : r)));
+      setRecords((prev) => prev.map((r, i) => (i === editIndex ? values as InstructorRecord : r)));
       toast({ title: "Instructor updated" });
     }
 

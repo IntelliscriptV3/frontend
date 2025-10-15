@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import {
@@ -44,6 +45,7 @@ type StudentItem = {
 };
 
 const Student = () => {
+  const navigate = useNavigate();
   const [view, setView] = useState<"menu" | "enrollment" | "student">("menu");
   const [enrollmentData, setEnrollmentData] = useState<EnrollmentItem[]>([]);
   const [studentData, setStudentData] = useState<StudentItem[]>([]);
@@ -62,6 +64,8 @@ const Student = () => {
     grade: "",
   });
   const [addStudentOpen, setAddStudentOpen] = useState(false);
+  const [editStudentOpen, setEditStudentOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<StudentItem | null>(null);
   const [newStudent, setNewStudent] = useState({
     first_name: "",
     middle_name: "",
@@ -76,34 +80,51 @@ const Student = () => {
   });
 
   const handleAddStudent = () => {
-  console.log("Adding new student:", newStudent);
+    const studentWithId = {
+      student_id: `S${Date.now()}`,
+      user_id: `U${Date.now()}`,
+      ...newStudent,
+      age: Number(newStudent.age),
+    };
 
-  // Create a new student object with an ID (you can replace this with backend-generated IDs later)
-  const studentWithId = {
-    student_id: `S${Date.now()}`, // temporary unique ID
-    user_id: `U${Date.now()}`,
-    ...newStudent,
-    age: Number(newStudent.age),
+    setStudentData((prev) => [...prev, studentWithId]);
+
+    setAddStudentOpen(false);
+    setNewStudent({
+      first_name: "",
+      middle_name: "",
+      last_name: "",
+      contact_no: "",
+      address_line1: "",
+      address_line2: "",
+      address_line3: "",
+      age: "",
+      stream: "",
+      grade: "",
+    });
   };
 
-  // Update the state to include the new student
-  setStudentData((prev) => [...prev, studentWithId]);
+  const handleEditStudent = (student: StudentItem) => {
+    setEditingStudent(student);
+    setEditStudentOpen(true);
+  };
 
-  // Close dialog and reset form
-  setAddStudentOpen(false);
-  setNewStudent({
-    first_name: "",
-    middle_name: "",
-    last_name: "",
-    contact_no: "",
-    address_line1: "",
-    address_line2: "",
-    address_line3: "",
-    age: "",
-    stream: "",
-    grade: "",
-  });
-};
+  const handleUpdateStudent = () => {
+    if (!editingStudent) return;
+
+    setStudentData((prev) =>
+      prev.map((s) =>
+        s.student_id === editingStudent.student_id ? editingStudent : s
+      )
+    );
+
+    setEditStudentOpen(false);
+    setEditingStudent(null);
+  };
+
+  const handleStudentClick = (studentId: string) => {
+    navigate(`/admin/student/${studentId}/enroll`);
+  };
 
   const filteredEnrollment = enrollmentData.filter((item) => {
     return (
@@ -419,7 +440,11 @@ const Student = () => {
                     </TableRow>
                   ) : (
                     filteredStudents.map((item) => (
-                      <TableRow key={item.student_id}>
+                      <TableRow
+                        key={item.student_id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleStudentClick(item.student_id)}
+                      >
                         <TableCell>{item.student_id}</TableCell>
                         <TableCell>{item.user_id}</TableCell>
                         <TableCell>
@@ -433,7 +458,14 @@ const Student = () => {
                         <TableCell>{item.stream}</TableCell>
                         <TableCell>{item.grade}</TableCell>
                         <TableCell>
-                          <Button size="icon" variant="ghost">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditStudent(item);
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -568,6 +600,134 @@ const Student = () => {
 
             <DialogFooter>
               <Button onClick={handleAddStudent}>Add Student</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={editStudentOpen} onOpenChange={setEditStudentOpen}>
+          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Student</DialogTitle>
+              <DialogDescription>Update the student details below.</DialogDescription>
+            </DialogHeader>
+
+            {editingStudent && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_first_name">First Name</Label>
+                    <Input
+                      id="edit_first_name"
+                      value={editingStudent.first_name}
+                      onChange={(e) =>
+                        setEditingStudent((prev) => prev ? ({ ...prev, first_name: e.target.value }) : null)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_middle_name">Middle Name</Label>
+                    <Input
+                      id="edit_middle_name"
+                      value={editingStudent.middle_name}
+                      onChange={(e) =>
+                        setEditingStudent((prev) => prev ? ({ ...prev, middle_name: e.target.value }) : null)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_last_name">Last Name</Label>
+                    <Input
+                      id="edit_last_name"
+                      value={editingStudent.last_name}
+                      onChange={(e) =>
+                        setEditingStudent((prev) => prev ? ({ ...prev, last_name: e.target.value }) : null)
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit_contact_no">Contact Number</Label>
+                  <Input
+                    id="edit_contact_no"
+                    value={editingStudent.contact_no}
+                    onChange={(e) =>
+                      setEditingStudent((prev) => prev ? ({ ...prev, contact_no: e.target.value }) : null)
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit_address_line1">Address Line 1</Label>
+                  <Input
+                    id="edit_address_line1"
+                    value={editingStudent.address_line1}
+                    onChange={(e) =>
+                      setEditingStudent((prev) => prev ? ({ ...prev, address_line1: e.target.value }) : null)
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit_address_line2">Address Line 2</Label>
+                  <Input
+                    id="edit_address_line2"
+                    value={editingStudent.address_line2}
+                    onChange={(e) =>
+                      setEditingStudent((prev) => prev ? ({ ...prev, address_line2: e.target.value }) : null)
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit_address_line3">Address Line 3</Label>
+                  <Input
+                    id="edit_address_line3"
+                    value={editingStudent.address_line3}
+                    onChange={(e) =>
+                      setEditingStudent((prev) => prev ? ({ ...prev, address_line3: e.target.value }) : null)
+                    }
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_age">Age</Label>
+                    <Input
+                      id="edit_age"
+                      type="number"
+                      value={editingStudent.age}
+                      onChange={(e) =>
+                        setEditingStudent((prev) => prev ? ({ ...prev, age: Number(e.target.value) }) : null)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_stream">Stream</Label>
+                    <Input
+                      id="edit_stream"
+                      value={editingStudent.stream}
+                      onChange={(e) =>
+                        setEditingStudent((prev) => prev ? ({ ...prev, stream: e.target.value }) : null)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_grade">Grade</Label>
+                    <Input
+                      id="edit_grade"
+                      value={editingStudent.grade}
+                      onChange={(e) =>
+                        setEditingStudent((prev) => prev ? ({ ...prev, grade: e.target.value }) : null)
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button onClick={handleUpdateStudent}>Update Student</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
