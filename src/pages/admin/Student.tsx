@@ -126,6 +126,10 @@ const Student = () => {
     navigate(`/admin/student/${studentId}/enroll`);
   };
 
+  const handleDelete = (id: string) => {
+    setTeachers((prev) => prev.filter((t) => t.teacher_id !== id));
+  };
+
   const filteredEnrollment = enrollmentData.filter((item) => {
     return (
       item.enrollment_id.toLowerCase().includes(enrollmentFilters.enrollment_id.toLowerCase()) &&
@@ -166,7 +170,7 @@ const Student = () => {
                     <div className="p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
                       <Users className="h-12 w-12 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-semibold">Student</h2>
+                    <h2 className="text-2xl font-semibold">Students</h2>
                     <p className="text-muted-foreground">Manage student information</p>
                   </div>
                 </div>
@@ -280,6 +284,9 @@ const Student = () => {
                             <Button size="icon" variant="ghost">
                               <Edit className="h-4 w-4" />
                             </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDelete(t.teacher_id)}>
+                            <Trash className="h-4 w-4 mr-1" /> Delete
+                          </Button>
                           </TableCell>
                         </TableRow>
                       ))
