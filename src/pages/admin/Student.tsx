@@ -157,19 +157,7 @@ const Student = () => {
             <div className="max-w-4xl mx-auto">
               <h1 className="text-3xl font-bold mb-8">Student Management</h1>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                  onClick={() => setView("enrollment")}
-                  className="group relative overflow-hidden rounded-lg border-2 border-border bg-card p-8 cursor-pointer hover:border-primary transition-all hover:scale-105"
-                >
-                  <div className="flex flex-col items-center text-center gap-4">
-                    <div className="p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <GraduationCap className="h-12 w-12 text-primary" />
-                    </div>
-                    <h2 className="text-2xl font-semibold">Enrollment</h2>
-                    <p className="text-muted-foreground">Manage student enrollments</p>
-                  </div>
-                </div>
-
+                
                 <div
                   onClick={() => setView("student")}
                   className="group relative overflow-hidden rounded-lg border-2 border-border bg-card p-8 cursor-pointer hover:border-primary transition-all hover:scale-105"
@@ -182,6 +170,20 @@ const Student = () => {
                     <p className="text-muted-foreground">Manage student information</p>
                   </div>
                 </div>
+
+                <div
+                  onClick={() => setView("enrollment")}
+                  className="group relative overflow-hidden rounded-lg border-2 border-border bg-card p-8 cursor-pointer hover:border-primary transition-all hover:scale-105"
+                >
+                  <div className="flex flex-col items-center text-center gap-4">
+                    <div className="p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <GraduationCap className="h-12 w-12 text-primary" />
+                    </div>
+                    <h2 className="text-2xl font-semibold">Enrollment</h2>
+                    <p className="text-muted-foreground">Manage student enrollments</p>
+                  </div>
+                </div>
+                
               </div>
             </div>
           </main>
