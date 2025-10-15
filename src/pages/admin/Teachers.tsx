@@ -218,13 +218,17 @@ const Teachers = () => {
                     </TableRow>
                   ) : (
                     teachers.map((t) => (
-                      <TableRow key={t.teacher_id}>
+                      <TableRow 
+                        key={t.teacher_id}
+                        className="cursor-pointer"
+                        onClick={() => navigate(`/admin/teacher/${t.teacher_id}/courses`)}
+                      >
                         <TableCell>{t.teacher_id}</TableCell>
                         <TableCell>{t.user_id}</TableCell>
                         <TableCell>{fullName(t)}</TableCell>
                         <TableCell>{fullAddress(t)}</TableCell>
                         <TableCell>{t.age}</TableCell>
-                        <TableCell className="space-x-2">
+                        <TableCell className="space-x-2" onClick={(e) => e.stopPropagation()}>
                           <Button size="sm" variant="outline" onClick={() => handleEditOpen(t)}>
                             <Edit className="h-4 w-4 mr-1" /> Edit
                           </Button>
