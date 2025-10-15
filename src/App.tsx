@@ -19,6 +19,7 @@ import Teachers from "./pages/admin/Teachers";
 import Courses from "./pages/admin/Courses";
 import StudentFee from "./pages/admin/StudentFee";
 import Attendance from "./pages/admin/Attendance";
+import Uploads from "./pages/admin/Uploads";
 
 // Teacher pages
 import TeacherChat from "./pages/teacher/TeacherChat";
@@ -62,6 +63,7 @@ const App = () => (
           <Route path="/admin/teacher" element={<Teacher />} />
           <Route path="/admin/teacher/teachers" element={<Teachers />} />
           <Route path="/admin/teacher/courses" element={<Courses />} />
+          <Route path="/admin/uploads" element={<Uploads />} />
           <Route path="/admin/fee" element={<StudentFee />} />
           <Route path="/admin/attendance" element={<Attendance />} />
           

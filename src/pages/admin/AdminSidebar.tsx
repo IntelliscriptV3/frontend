@@ -20,6 +20,7 @@ const menuItems = [
   { title: "Student", icon: GraduationCap, path: "/admin/student" },
   { title: "Teacher", icon: User, path: "/admin/teacher" },
   { title: "Student Fee", icon: DollarSign, path: "/admin/fee" },
+  { title: "Uploads", icon: ListOrdered, path: "/admin/uploads" },
   { title: "Attendance", icon: Calendar, path: "/admin/attendance" },
 ];
 
