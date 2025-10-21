@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { RoleTile } from "@/components/RoleTile";
 import adminIcon from "@/assets/admin-icon.png";
-import teacherIcon from "@/assets/teacher-icon.png";
-import instructorIcon from "@/assets/instructor-icon.png";
+
 import studentIcon from "@/assets/student-icon.png";
 
 const Index = () => {
@@ -10,8 +9,7 @@ const Index = () => {
 
   const roles = [
     { title: "Admin", icon: adminIcon, path: "/admin" },
-    { title: "Teacher", icon: teacherIcon, path: "/teacher" },
-    { title: "Instructor", icon: instructorIcon, path: "/instructor" },
+    
     { title: "Student", icon: studentIcon, path: "/student" },
   ];
 
@@ -27,15 +25,17 @@ const Index = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {roles.map((role) => (
-            <RoleTile
-              key={role.title}
-              title={role.title}
-              icon={role.icon}
-              onClick={() => navigate(role.path)}
-            />
-          ))}
+        <div className="flex justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {roles.map((role) => (
+              <RoleTile
+                key={role.title}
+                title={role.title}
+                icon={role.icon}
+                onClick={() => navigate(role.path)}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

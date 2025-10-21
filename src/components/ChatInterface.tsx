@@ -52,8 +52,9 @@ const AttachmentView: React.FC<{ att: Attachment }> = ({ att }) => {
             onClick={async () => {
               try {
                 await downloadFile(att.url, att.filename);
-              } catch (err: any) {
-                toast({ title: "Download failed", description: err?.message || String(err) });
+              } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : String(err);
+                toast({ title: "Download failed", description: message });
               }
             }}
           >
@@ -76,18 +77,13 @@ export const ChatInterface = () => {
     setMessages([...messages, { role: "user", content: input }]);
     setInput("");
 
-    // Simulate response — example with attachments
+    // Simulate response
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "This is a placeholder response. Backend integration pending. Example image and file may appear below.",
-          attachments: [
-            // example image (only for demo; real backend will provide URLs)
-            { url: "https://via.placeholder.com/400x200.png?text=Example+Image", filename: "example-image.png", contentType: "image/png" },
-            { url: "/api/files/sample.pdf", filename: "sample.pdf", contentType: "application/pdf" },
-          ],
+          content: "This is a placeholder response. Backend integration pending.",
         },
       ]);
     }, 500);

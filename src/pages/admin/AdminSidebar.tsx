@@ -16,12 +16,12 @@ import {
 const menuItems = [
   { title: "Settings", icon: Settings, path: "/admin/settings" },
   { title: "Admin Queue", icon: ListOrdered, path: "/admin/queue" },
-  { title: "Management", icon: Users, path: "/admin/management" },
-  { title: "Student", icon: GraduationCap, path: "/admin/student" },
-  { title: "Teacher", icon: User, path: "/admin/teacher" },
-  { title: "Student Fee", icon: DollarSign, path: "/admin/fee" },
+  //{ title: "Management", icon: Users, path: "/admin/management" },
+  //{ title: "Student", icon: GraduationCap, path: "/admin/student" },
+ // { title: "Teacher", icon: User, path: "/admin/teacher" },
+  //{ title: "Student Fee", icon: DollarSign, path: "/admin/fee" },
   { title: "Uploads", icon: ListOrdered, path: "/admin/uploads" },
-  { title: "Attendance", icon: Calendar, path: "/admin/attendance" },
+ // { title: "Attendance", icon: Calendar, path: "/admin/attendance" },
 ];
 
 export const AdminSidebar = () => {

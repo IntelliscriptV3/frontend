@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { Send, Forward, Search } from "lucide-react";
 
+type PanelView = "queue" | "history";
+
 type QueueItem = {
   queue_id: string;
   question: string;
@@ -32,6 +34,15 @@ type QueueItem = {
   resolved_at: string;
 };
 
+type ChatHistoryItem = {
+  chat_id: string;
+  user_id: string;
+  question: string;
+  answer: string;
+  status: string;
+  date_time: string;
+};
+
 // Sample teachers data - replace with actual data from backend
 const sampleTeachers = [
   { id: "T001", name: "John Smith" },
@@ -40,13 +51,23 @@ const sampleTeachers = [
 ];
 
 const AdminQueue = () => {
+  const [activePanel, setActivePanel] = useState<PanelView>("queue");
   const [queueData, setQueueData] = useState<QueueItem[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [filters, setFilters] = useState({
     queue_id: "",
     question: "",
     answered_by: "",
     user_id: "",
+  });
+  const [historyFilters, setHistoryFilters] = useState({
+    chat_id: "",
+    user_id: "",
+    question: "",
+    answer: "",
+    status: "",
+    date_time: "",
   });
   const [forwardDialogOpen, setForwardDialogOpen] = useState(false);
   const [selectedQueueId, setSelectedQueueId] = useState<string>("");
@@ -90,6 +111,17 @@ const AdminQueue = () => {
     );
   });
 
+  const filteredHistory = chatHistory.filter((item) => {
+    return (
+      item.chat_id.toLowerCase().includes(historyFilters.chat_id.toLowerCase()) &&
+      item.user_id.toLowerCase().includes(historyFilters.user_id.toLowerCase()) &&
+      item.question.toLowerCase().includes(historyFilters.question.toLowerCase()) &&
+      item.answer.toLowerCase().includes(historyFilters.answer.toLowerCase()) &&
+      item.status.toLowerCase().includes(historyFilters.status.toLowerCase()) &&
+      item.date_time.toLowerCase().includes(historyFilters.date_time.toLowerCase())
+    );
+  });
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -98,7 +130,27 @@ const AdminQueue = () => {
           <div className="max-w-7xl mx-auto">
             <h1 className="text-3xl font-bold mb-6">Admin Queue</h1>
 
-            <div className="rounded-md border">
+            {/* Panel Buttons */}
+            <div className="flex gap-4 mb-6">
+              <Button
+                variant={activePanel === "queue" ? "default" : "outline"}
+                onClick={() => setActivePanel("queue")}
+                className="flex-1 h-12"
+              >
+                Admin Queue
+              </Button>
+              <Button
+                variant={activePanel === "history" ? "default" : "outline"}
+                onClick={() => setActivePanel("history")}
+                className="flex-1 h-12"
+              >
+                Chat History
+              </Button>
+            </div>
+
+            {/* Admin Queue Table */}
+            {activePanel === "queue" && (
+              <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -209,6 +261,117 @@ const AdminQueue = () => {
                 </TableBody>
               </Table>
             </div>
+            )}
+
+            {/* Chat History Table */}
+            {activePanel === "history" && (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <div className="space-y-2">
+                          <div>Chat ID</div>
+                          <Input
+                            placeholder="Filter..."
+                            value={historyFilters.chat_id}
+                            onChange={(e) =>
+                              setHistoryFilters((prev) => ({ ...prev, chat_id: e.target.value }))
+                            }
+                            className="h-8"
+                          />
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="space-y-2">
+                          <div>User ID</div>
+                          <Input
+                            placeholder="Filter..."
+                            value={historyFilters.user_id}
+                            onChange={(e) =>
+                              setHistoryFilters((prev) => ({ ...prev, user_id: e.target.value }))
+                            }
+                            className="h-8"
+                          />
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="space-y-2">
+                          <div>Question</div>
+                          <Input
+                            placeholder="Filter..."
+                            value={historyFilters.question}
+                            onChange={(e) =>
+                              setHistoryFilters((prev) => ({ ...prev, question: e.target.value }))
+                            }
+                            className="h-8"
+                          />
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="space-y-2">
+                          <div>Answer</div>
+                          <Input
+                            placeholder="Filter..."
+                            value={historyFilters.answer}
+                            onChange={(e) =>
+                              setHistoryFilters((prev) => ({ ...prev, answer: e.target.value }))
+                            }
+                            className="h-8"
+                          />
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="space-y-2">
+                          <div>Status</div>
+                          <Input
+                            placeholder="Filter..."
+                            value={historyFilters.status}
+                            onChange={(e) =>
+                              setHistoryFilters((prev) => ({ ...prev, status: e.target.value }))
+                            }
+                            className="h-8"
+                          />
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="space-y-2">
+                          <div>Date/Time</div>
+                          <Input
+                            placeholder="Filter..."
+                            value={historyFilters.date_time}
+                            onChange={(e) =>
+                              setHistoryFilters((prev) => ({ ...prev, date_time: e.target.value }))
+                            }
+                            className="h-8"
+                          />
+                        </div>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredHistory.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          No chat history yet. Data will appear here when added.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredHistory.map((item) => (
+                        <TableRow key={item.chat_id}>
+                          <TableCell>{item.chat_id}</TableCell>
+                          <TableCell>{item.user_id}</TableCell>
+                          <TableCell>{item.question}</TableCell>
+                          <TableCell>{item.answer}</TableCell>
+                          <TableCell>{item.status}</TableCell>
+                          <TableCell>{item.date_time}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </div>
         </main>
 

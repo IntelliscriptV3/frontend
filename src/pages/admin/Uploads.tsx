@@ -21,7 +21,7 @@ const Uploads: React.FC = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { toast } = useToast();
 
-  const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || "";
+  const API_BASE = (import.meta.env?.VITE_API_BASE_URL as string | undefined) || "";
 
   const handlePick = (type: string) => {
     if (!inputRef.current) return;
@@ -57,8 +57,9 @@ const Uploads: React.FC = () => {
 
       const data = await res.json().catch(() => null);
       t.update({ id: t.id, title: `Uploaded ${type}`, description: data?.message || `Uploaded ${names}` });
-    } catch (err: any) {
-      t.update({ id: t.id, title: `Upload error`, description: err?.message || String(err) });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      t.update({ id: t.id, title: `Upload error`, description: message });
     }
   };
 
