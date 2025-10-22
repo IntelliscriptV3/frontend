@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import {
@@ -52,6 +52,11 @@ const sampleTeachers = [
 
 const AdminQueue = () => {
   const [activePanel, setActivePanel] = useState<PanelView>("queue");
+  const API_BASE = (import.meta.env?.VITE_API_BASE_URL as string | undefined) || "";
+  const [loadingQueue, setLoadingQueue] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [queueError, setQueueError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [queueData, setQueueData] = useState<QueueItem[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
@@ -122,6 +127,70 @@ const AdminQueue = () => {
     );
   });
 
+  const fetchQueue = async () => {
+    setLoadingQueue(true);
+    setQueueError(null);
+    try {
+  const queueUrl = `http://localhost:8000/admin/admin_queue/`;
+      const res = await fetch(queueUrl, { credentials: "include" });
+      if (!res.ok) throw new Error(`Failed to fetch queue (${res.status})`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        const mapped = data.map((d: any) => ({
+          queue_id: String(d.queue_id ?? d.queueId ?? d.queue ?? d.id ?? ""),
+          question: String(d.question ?? d.q ?? ""),
+          answer: d.answer == null ? "" : String(d.answer),
+          answered_by: String(d.answered_by ?? d.answeredBy ?? d.answered_by ?? ""),
+          user_id: String(d.user_id ?? d.userId ?? d.user ?? ""),
+          assigned_at: String(d.assigned_at ?? d.assignedAt ?? d.assigned_at ?? ""),
+          resolved_at: String(d.resolved_at ?? d.resolvedAt ?? d.resolved_at ?? ""),
+        }));
+        setQueueData(mapped);
+      } else {
+        setQueueData([]);
+      }
+    } catch (err: unknown) {
+      setQueueError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoadingQueue(false);
+    }
+  };
+
+  const fetchHistory = async () => {
+    setLoadingHistory(true);
+    setHistoryError(null);
+    try {
+  const historyUrl = `http://localhost:8000/admin/chat_log/`;
+      const res = await fetch(historyUrl, { credentials: "include" });
+      if (!res.ok) throw new Error(`Failed to fetch chat history (${res.status})`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        const mapped = data.map((d: any) => ({
+          chat_id: String(d.chat_id ?? d.chatId ?? d.id ?? ""),
+          user_id: String(d.user_id ?? d.userId ?? d.user ?? ""),
+          question: String(d.question ?? d.q ?? ""),
+          answer: d.answer == null ? "" : String(d.answer),
+          status: String(d.status ?? d.state ?? d.status ?? ""),
+          date_time: String(d.created_at ?? d.date_time ?? d.createdAt ?? ""),
+        }));
+        setChatHistory(mapped);
+      } else {
+        setChatHistory([]);
+      }
+    } catch (err: unknown) {
+      setHistoryError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  // initial load
+  useEffect(() => {
+    void fetchQueue();
+    void fetchHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -151,6 +220,15 @@ const AdminQueue = () => {
             {/* Admin Queue Table */}
             {activePanel === "queue" && (
               <div className="rounded-md border">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center gap-3">
+                    <Button size="sm" onClick={() => void fetchQueue()}>
+                      Refresh
+                    </Button>
+                    {loadingQueue && <span className="text-sm text-muted-foreground">Loading...</span>}
+                    {queueError && <span className="text-sm text-destructive">{queueError}</span>}
+                  </div>
+                </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -266,6 +344,15 @@ const AdminQueue = () => {
             {/* Chat History Table */}
             {activePanel === "history" && (
               <div className="rounded-md border">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center gap-3">
+                    <Button size="sm" onClick={() => void fetchHistory()}>
+                      Refresh
+                    </Button>
+                    {loadingHistory && <span className="text-sm text-muted-foreground">Loading...</span>}
+                    {historyError && <span className="text-sm text-destructive">{historyError}</span>}
+                  </div>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>

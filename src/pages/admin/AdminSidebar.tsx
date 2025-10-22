@@ -1,4 +1,4 @@
-import { Home, Settings, ListOrdered, Users, GraduationCap, User, DollarSign, Calendar } from "lucide-react";
+import { Home, Settings, ListOrdered, Users, GraduationCap, User, DollarSign, Calendar, MessageSquare } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const menuItems = [
+  { title: "Admin Chat", icon: MessageSquare, path: "/admin" },
   { title: "Settings", icon: Settings, path: "/admin/settings" },
   { title: "Admin Queue", icon: ListOrdered, path: "/admin/queue" },
   //{ title: "Management", icon: Users, path: "/admin/management" },

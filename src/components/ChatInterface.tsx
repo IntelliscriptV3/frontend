@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Download } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Attachment {
@@ -69,24 +70,77 @@ const AttachmentView: React.FC<{ att: Attachment }> = ({ att }) => {
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  // Use Vite env var VITE_API_BASE or fallback to localhost backend
+  const API_BASE = ((import.meta as any)?.env?.VITE_API_BASE as string) || "http://localhost:8000";
 
-    setMessages([...messages, { role: "user", content: input }]);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Scroll to bottom when messages change
+    try {
+      const el = scrollRef.current;
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
+
+  const userText = input;
+    // Optimistically add user message
+    setMessages((prev) => [...prev, { role: "user", content: userText }]);
     setInput("");
+    setLoading(true);
 
-    // Simulate response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "This is a placeholder response. Backend integration pending.",
-        },
-      ]);
-    }, 500);
+    try {
+      // Call the backend classify endpoint (GET) with query params
+      const url = `${API_BASE.replace(/\/$/, "")}/chat/classify?user_query=${encodeURIComponent(userText)}&user_id=1`;
+      const res = await fetch(url, { credentials: "include" });
+
+      if (!res.ok) {
+        const text = await res.text();
+        toast({ title: "Backend error", description: `Status ${res.status}: ${text}` });
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: `Error from backend (status ${res.status}).` },
+        ]);
+        return;
+      }
+
+      let data: any;
+      try {
+        data = await res.json();
+      } catch (e) {
+        const text = await res.text();
+        data = { response_text: text };
+      }
+
+      // The classifier may return different shapes. Prefer common keys then
+      // unwrap single-key objects that contain a string so the UI shows just
+      // the human-readable message instead of the full JSON.
+      const assistantText =
+        data?.response ?? data?.message ?? data?.response_text ?? data?.answer ??
+        (typeof data === "string"
+          ? data
+          : typeof data === "object" && data !== null && Object.keys(data).length === 1 && typeof Object.values(data)[0] === "string"
+          ? (Object.values(data)[0] as any)
+          : JSON.stringify(data));
+
+      setMessages((prev) => [...prev, { role: "assistant", content: String(assistantText) }]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: "Network error", description: message });
+      setMessages((prev) => [...prev, { role: "assistant", content: `Network error: ${message}` }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderContentWithLinks = (text: string) => {
@@ -113,7 +167,7 @@ export const ChatInterface = () => {
   return (
     <div className="flex flex-col h-full bg-background">
       <ScrollArea className="flex-1 p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div ref={scrollRef} className="max-w-4xl mx-auto space-y-6">
           {messages.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <p className="text-lg">Start a conversation...</p>
@@ -154,11 +208,12 @@ export const ChatInterface = () => {
         <div className="max-w-4xl mx-auto flex gap-4">
           <Textarea
             value={input}
+            disabled={loading}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                handleSend();
+                if (!loading) handleSend();
               }
             }}
             placeholder="Type your message..."
@@ -168,9 +223,10 @@ export const ChatInterface = () => {
           <Button
             onClick={handleSend}
             size="icon"
+            disabled={loading}
             className="h-auto w-16 bg-gradient-to-br from-primary to-secondary hover:opacity-90"
           >
-            <Send className="h-5 w-5" />
+            <Send className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>
       </div>
