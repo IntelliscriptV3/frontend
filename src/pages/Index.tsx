@@ -32,7 +32,14 @@ const Index = () => {
                 key={role.title}
                 title={role.title}
                 icon={role.icon}
-                onClick={() => navigate(role.path)}
+                onClick={() => {
+                  try {
+                    localStorage.setItem("user_role", role.title.toLowerCase());
+                  } catch (e) {
+                    // ignore localStorage errors
+                  }
+                  navigate(role.path);
+                }}
               />
             ))}
           </div>

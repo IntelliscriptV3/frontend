@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import AdminChat from "./pages/admin/AdminChat";
 import Settings from "./pages/admin/Settings";
 import AdminQueue from "./pages/admin/AdminQueue";
+import RequireRole from "./components/RequireRole";
 
 import Uploads from "./pages/admin/Uploads";
 
@@ -32,18 +33,18 @@ const App = () => (
           <Route path="/" element={<Index />} />
           
           {/* Admin routes */}
-          <Route path="/admin" element={<AdminChat />} />
-          <Route path="/admin/settings" element={<Settings />} />
-          <Route path="/admin/queue" element={<AdminQueue />} />
-         
-          <Route path="/admin/uploads" element={<Uploads />} />
+          <Route path="/admin" element={<RequireRole allowed="admin"><AdminChat /></RequireRole>} />
+          <Route path="/admin/settings" element={<RequireRole allowed="admin"><Settings /></RequireRole>} />
+          <Route path="/admin/queue" element={<RequireRole allowed="admin"><AdminQueue /></RequireRole>} />
+
+          <Route path="/admin/uploads" element={<RequireRole allowed="admin"><Uploads /></RequireRole>} />
           
           
         
           
           
           {/* Student routes */}
-          <Route path="/student" element={<StudentChat />} />
+          <Route path="/student" element={<RequireRole allowed="student"><StudentChat /></RequireRole>} />
           
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -104,7 +104,8 @@ export const ChatInterface = () => {
 
     try {
       // Call the backend classify endpoint (GET) with query params
-      const url = `${API_BASE.replace(/\/$/, "")}/chat/classify?user_query=${encodeURIComponent(userText)}&user_id=1`;
+  const role = (typeof window !== "undefined" && localStorage.getItem("user_role")) || "student";
+  const url = `${API_BASE.replace(/\/$/, "")}/chat/classify?user_query=${encodeURIComponent(userText)}&user_id=1&user_role=${encodeURIComponent(role)}`;
       const res = await fetch(url, { credentials: "include" });
 
       if (!res.ok) {
@@ -161,7 +162,38 @@ export const ChatInterface = () => {
         }
       }
 
-      setMessages((prev) => [...prev, { role: "assistant", content: String(assistantText), attachments: attachments.length ? attachments : undefined }]);
+      // Deduplicate: if the assistantText embeds the same image (markdown or <img>)
+      // that we're also returning as an attachment, strip the inline image markup
+      // so the UI only shows the attachment once.
+      const attachmentUrls = new Set(attachments.map((a) => a.url));
+      let cleanedText = String(assistantText || "");
+
+      if (cleanedText) {
+        // Remove markdown image syntax that references an attachment URL
+        cleanedText = cleanedText.replace(/!\[[^\]]*\]\(([^)]+)\)/g, (m, src) => {
+          try {
+            const s = String(src || "");
+            // normalize raw base64 -> data: prefix for comparison
+            const norm = /^data:/i.test(s) || s.startsWith("http://") || s.startsWith("https://") ? s : `data:image/png;base64,${s}`;
+            return attachmentUrls.has(norm) ? "" : m;
+          } catch (e) {
+            return m;
+          }
+        });
+
+        // Remove HTML <img src="..."> tags that reference an attachment URL
+        cleanedText = cleanedText.replace(/<img[^>]*src=["']([^"']+)["'][^>]*>/gi, (m, src) => {
+          try {
+            const s = String(src || "");
+            const norm = /^data:/i.test(s) || s.startsWith("http://") || s.startsWith("https://") ? s : `data:image/png;base64,${s}`;
+            return attachmentUrls.has(norm) ? "" : m;
+          } catch (e) {
+            return m;
+          }
+        });
+      }
+
+      setMessages((prev) => [...prev, { role: "assistant", content: cleanedText, attachments: attachments.length ? attachments : undefined }]);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       toast({ title: "Network error", description: message });
